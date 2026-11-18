@@ -34,9 +34,15 @@ source code is never changed, so every official update works.
 - Internet during setup and updates
 - A drive formatted as **NTFS or exFAT**. FAT32 cannot hold files over 4 GB (local models).
 
+Last tested with **Hermes Agent v0.23.2** (`main` channel, November 2026). Hermes changes quickly and
+these scripts rely on its installer stages and build scripts, so a newer Hermes version can break setup
+or updates. If that happens, please [open an issue](https://github.com/Toprr/portable-hermes/issues).
+
 ## Install
 
-**Option A: one command.** Open PowerShell and run this (replace `E:\Hermes` with your folder):
+**Option A: one command.** Open PowerShell and run this (replace `E:\Hermes` with your folder).
+It installs the newest [release](https://github.com/Toprr/portable-hermes/releases); add `-Ref main`
+for the latest development state.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -c "& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Toprr/portable-hermes/main/install.ps1))) -Path E:\Hermes"
@@ -44,7 +50,8 @@ powershell -ExecutionPolicy Bypass -c "& ([scriptblock]::Create((irm https://raw
 
 **Option B: by hand.**
 
-1. Download this repository (Code → Download ZIP) and unpack it into an empty folder on your drive,
+1. Download the newest release ZIP from [Releases](https://github.com/Toprr/portable-hermes/releases)
+   and unpack it into an empty folder on your drive,
    for example `E:\Hermes`. Use a path without spaces.
 2. Right-click the ZIP → Properties → **Unblock** before unpacking, or Windows may block the scripts.
 3. Run `Setup.bat`.
@@ -168,4 +175,5 @@ How it works in detail, and the problems it solves: [docs/how-it-works.md](docs/
   `pkgs.tailscale.com` only when you turn on remote access.
 - Python, Node.js, Git for Windows, Chromium, llama.cpp and other tools are installed by Hermes'
   own package manager under their respective licenses.
-- The scripts in this repository: MIT License, see [LICENSE](LICENSE).
+- The scripts in this repository: MIT License, see [LICENSE](LICENSE). It covers only these scripts:
+  Hermes Agent, Tailscale and every other program the scripts download keep their own licenses.

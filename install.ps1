@@ -4,9 +4,15 @@
 #   powershell -ExecutionPolicy Bypass -c "& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Toprr/portable-hermes/main/install.ps1))) -Path E:\Hermes"
 #
 # Without -Path it asks for the folder. The folder must be empty or not exist yet.
-param([string]$Path)
+# It installs the newest release; -Ref main (or a tag like -Ref v1.0.0) installs that state instead.
+param([string]$Path, [string]$Ref)
 $ErrorActionPreference = "Stop"
-$repoZip = "https://github.com/Toprr/portable-hermes/archive/refs/heads/main.zip"
+if (-not $Ref) {
+    try { $Ref = (Invoke-RestMethod "https://api.github.com/repos/Toprr/portable-hermes/releases/latest" -UseBasicParsing).tag_name }
+    catch { Write-Warning "Could not look up the newest release, using main."; $Ref = "main" }
+}
+$repoZip = if ($Ref -eq "main") { "https://github.com/Toprr/portable-hermes/archive/refs/heads/main.zip" }
+           else { "https://github.com/Toprr/portable-hermes/archive/refs/tags/$Ref.zip" }
 
 if (-not $Path) { $Path = Read-Host "Folder for Portable Hermes (e.g. E:\Hermes)" }
 if (-not $Path) { throw "No folder given." }
@@ -20,7 +26,7 @@ if ((Test-Path -LiteralPath $Path) -and (Get-ChildItem -LiteralPath $Path -Force
 $tmp = Join-Path ([IO.Path]::GetTempPath()) ("portable-hermes-" + [guid]::NewGuid().ToString("N").Substring(0, 8))
 New-Item -ItemType Directory -Force -Path $tmp | Out-Null
 try {
-    Write-Host "Downloading Portable Hermes..."
+    Write-Host "Downloading Portable Hermes ($Ref)..."
     $ProgressPreference = "SilentlyContinue"
     Invoke-WebRequest $repoZip -OutFile "$tmp\repo.zip" -UseBasicParsing
     Expand-Archive -LiteralPath "$tmp\repo.zip" -DestinationPath "$tmp\x" -Force
