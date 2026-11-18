@@ -21,6 +21,14 @@ Every script dot-sources `portable-env.ps1` first. It sets, for the current proc
 | `GIT_CONFIG_GLOBAL` | `data\gitconfig` | `~/.gitconfig` (it includes your normal one) |
 | `PATH` | the tools Hermes' package manager installed (read from `data\tools\facts.json`) first | (none) |
 
+It also sets `HERMES_WRITE_SAFE_ROOT`, Hermes' own write guard for its file tools (`write_file`,
+`patch`). It lists this folder plus every top-level folder of all other local drives, so on the
+drive that holds Portable Hermes nothing outside its folder can be written, while the PC's other
+drives stay usable. (A bare drive root such as `C:\` is not accepted as a root by Hermes' check,
+hence the folder list. Files directly in a drive root, and top-level folders created after the
+start, stay blocked until the next start.) Without it, a path like `/tmp/x` resolves to
+`<drive>:\tmp\x` on the USB drive. Terminal commands are not covered by this guard.
+
 `data\gitconfig` adds `safe.directory=*`. exFAT stores no file owner, so Git otherwise refuses the
 Hermes checkout ("dubious ownership"). Your own `~/.gitconfig` is included and never changed.
 

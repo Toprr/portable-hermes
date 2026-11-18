@@ -23,6 +23,9 @@ source code is never changed, so every official update works.
 - **Updates** with Hermes' own updater (`Update.bat`). Settings and chats stay where they are.
 - **Works on exFAT** (the usual format of USB SSDs): the interfaces that cannot be built on exFAT are
   built in a temporary copy on the system drive and copied back.
+- **Your other files are safe:** on the drive that holds Portable Hermes, Hermes' file tools may only
+  write inside its own folder, so the rest of your USB drive is left alone (Hermes' built-in
+  `HERMES_WRITE_SAFE_ROOT` guard). Other drives of the PC stay writable when you ask for it.
 - **Any PC:** a drive letter change on another PC is handled for you (see [Drive letters](#drive-letters)).
 - **Optional remote access** from your phone or laptop over [Tailscale](https://tailscale.com),
   also fully portable: no Tailscale installation, no service, no network adapter.
