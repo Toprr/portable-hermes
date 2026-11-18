@@ -48,21 +48,6 @@ $env:GIT_CONFIG_COUNT   = "1"
 $env:GIT_CONFIG_KEY_0   = "safe.directory"
 $env:GIT_CONFIG_VALUE_0 = "*"
 
-# Hermes' own write guard for its file tools (write_file/patch): on the drive that holds this folder
-# only inside this folder (your other files on that drive stay untouched; "/tmp/x" would otherwise
-# resolve to <drive>:\tmp\x), on every other local drive everywhere. Hermes cannot take a whole drive
-# as a root, so each drive's top-level folders are listed (new top-level folders and files directly
-# in a drive root stay blocked until the next start). Terminal commands are not covered by it.
-$homeDrive  = (Split-Path $root -Qualifier).ToUpper()
-$writeRoots = @($root)
-foreach ($drive in [IO.DriveInfo]::GetDrives()) {
-    if ($drive.DriveType -notin 'Fixed', 'Removable' -or -not $drive.IsReady) { continue }
-    if ($drive.Name.TrimEnd('\').ToUpper() -eq $homeDrive) { continue }
-    $writeRoots += @(Get-ChildItem -LiteralPath $drive.RootDirectory.FullName -Directory -Force -ErrorAction SilentlyContinue |
-        ForEach-Object FullName)
-}
-$env:HERMES_WRITE_SAFE_ROOT = $writeRoots -join ';'
-
 # temporary files inside the portable folder as well
 $tmp = Join-Path $root "cache\tmp"
 $env:TEMP = $tmp

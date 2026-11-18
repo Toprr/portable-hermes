@@ -23,9 +23,6 @@ source code is never changed, so every official update works.
 - **Updates** with Hermes' own updater (`Update.bat`). Settings and chats stay where they are.
 - **Works on exFAT** (the usual format of USB SSDs): the interfaces that cannot be built on exFAT are
   built in a temporary copy on the system drive and copied back.
-- **Your other files are safe:** on the drive that holds Portable Hermes, Hermes' file tools may only
-  write inside its own folder, so the rest of your USB drive is left alone (Hermes' built-in
-  `HERMES_WRITE_SAFE_ROOT` guard). Other drives of the PC stay writable when you ask for it.
 - **Any PC:** a drive letter change on another PC is handled for you (see [Drive letters](#drive-letters)).
 - **Optional remote access** from your phone or laptop over [Tailscale](https://tailscale.com),
   also fully portable: no Tailscale installation, no service, no network adapter.
@@ -59,7 +56,7 @@ powershell -ExecutionPolicy Bypass -c "& ([scriptblock]::Create((irm https://raw
 2. Right-click the ZIP → Properties → **Unblock** before unpacking, or Windows may block the scripts.
 3. Run `Setup.bat`.
 
-Setup takes about 10 to 20 minutes. It runs the official Hermes installer stage by stage into this folder
+Setup takes about 10–20 minutes. It runs the official Hermes installer stage by stage into this folder
 and builds the interfaces. Then start Hermes with **`Hermes.bat`** and set up a model provider in the
 Webapp, the same way as in a normal Hermes install.
 
