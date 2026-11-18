@@ -1,0 +1,9 @@
+# Everything Setup.bat creates or downloads - never commit it (it holds your settings, API keys, chats)
+/hermes-agent/
+/data/
+/cache/
+/workspace/
+/tools/
+/models/
+# the official installer, downloaded fresh by setup.ps1
+/scripts/hermes-install.ps1

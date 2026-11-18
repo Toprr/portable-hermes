@@ -1,0 +1,5 @@
+# Windows scripts keep CRLF line endings in every checkout and in the GitHub ZIP download
+# (cmd.exe misreads labels in batch files with LF endings)
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+*.md  text
