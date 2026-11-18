@@ -56,7 +56,7 @@ powershell -ExecutionPolicy Bypass -c "& ([scriptblock]::Create((irm https://raw
 2. Right-click the ZIP → Properties → **Unblock** before unpacking, or Windows may block the scripts.
 3. Run `Setup.bat`.
 
-Setup takes about 10–20 minutes. It runs the official Hermes installer stage by stage into this folder
+Setup takes about 10 to 20 minutes. It runs the official Hermes installer stage by stage into this folder
 and builds the interfaces. Then start Hermes with **`Hermes.bat`** and set up a model provider in the
 Webapp, the same way as in a normal Hermes install.
 

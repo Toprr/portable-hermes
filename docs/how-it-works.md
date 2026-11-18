@@ -19,7 +19,7 @@ Every script dot-sources `portable-env.ps1` first. It sets, for the current proc
 | `HERMES_GATEWAY_LOCK_DIR` | `data\state\gateway-locks` | `%USERPROFILE%\.local\state\hermes` |
 | `TEMP`, `TMP` | `cache\tmp` | `%LOCALAPPDATA%\Temp` |
 | `GIT_CONFIG_GLOBAL` | `data\gitconfig` | `~/.gitconfig` (it includes your normal one) |
-| `PATH` | the tools Hermes' package manager installed (read from `data\tools\facts.json`) first | – |
+| `PATH` | the tools Hermes' package manager installed (read from `data\tools\facts.json`) first | (none) |
 
 `data\gitconfig` adds `safe.directory=*`. exFAT stores no file owner, so Git otherwise refuses the
 Hermes checkout ("dubious ownership"). Your own `~/.gitconfig` is included and never changed.
