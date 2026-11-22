@@ -14,6 +14,8 @@ if ($Check) {
     exit $LASTEXITCODE
 }
 
+. (Join-Path $PSScriptRoot "portable-env.ps1")
+. (Join-Path $PSScriptRoot "clear-git-locks.ps1")
 Write-Host "-> Updating Hermes Agent (official updater)" -ForegroundColor Cyan
 Write-Host "   (on exFAT drives Hermes' own in-place Node build reports a symlink error; the builds below replace it)"
 & powershell -NoProfile -ExecutionPolicy Bypass -File $hermes update --yes
@@ -29,7 +31,6 @@ $web = $LASTEXITCODE
 
 & powershell -NoProfile -ExecutionPolicy Bypass -File $hermes --version
 # leftovers the Node builds put outside this folder (pnpm lock files)
-. (Join-Path $PSScriptRoot "portable-env.ps1")
 & (Join-Path $PSScriptRoot "cleanup-host.ps1")
 if ($code -or $ui -or $web) {
     Write-Warning "The update finished with warnings (updater exit $code, interface build exit $ui, Webapp build exit $web). Hermes keeps working; see the output above."

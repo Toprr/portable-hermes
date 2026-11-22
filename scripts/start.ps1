@@ -18,13 +18,20 @@ if (-not (Test-Path (Join-Path $env:HERMES_HOME "tools\facts.json"))) {
 }
 
 # The agent works in workspace\ (terminal.cwd). "." would be wherever the gateway was started, often
-# the user folder; keep it on workspace\ - also after a drive letter change.
+# the user folder; keep it on workspace\ - also after a drive letter change, for every bot (profile).
 $work = Join-Path $root "workspace"
 New-Item -ItemType Directory -Force -Path $work | Out-Null
-$cfgText = Get-Content -Raw -LiteralPath (Join-Path $env:HERMES_HOME "config.yaml") -ErrorAction SilentlyContinue
-$m = [regex]::Match("$cfgText", '(?m)^terminal:\s*\r?\n(?:[ \t]+.*\r?\n|\s*\r?\n)*?[ \t]+cwd:[ \t]*(.*?)[ \t]*(#.*)?\r?$')
-$curCwd = if ($m.Success) { $m.Groups[1].Value.Trim().Trim('"', "'").Replace('\\', '\') } else { "" }
-if ($curCwd -ne $work) { & $hermes config set terminal.cwd $work | Out-Null }
+$bots = @(@{ Args = @(); Dir = $env:HERMES_HOME }) +
+        @(Get-ChildItem (Join-Path $env:HERMES_HOME "profiles") -Directory -ErrorAction SilentlyContinue |
+            Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName "config.yaml") } |
+            ForEach-Object { @{ Args = @("-p", $_.Name); Dir = $_.FullName } })
+foreach ($bot in $bots) {
+    $cfgText = Get-Content -Raw -LiteralPath (Join-Path $bot.Dir "config.yaml") -ErrorAction SilentlyContinue
+    $m = [regex]::Match("$cfgText", '(?m)^terminal:\s*\r?\n(?:[ \t]+.*\r?\n|\s*\r?\n)*?[ \t]+cwd:[ \t]*(.*?)[ \t]*(#.*)?\r?$')
+    $curCwd = if ($m.Success) { $m.Groups[1].Value.Trim().Trim('"', "'").Replace('\\', '\') } else { "" }
+    $botArgs = $bot.Args
+    if ($curCwd -ne $work) { & $hermes @botArgs config set terminal.cwd $work | Out-Null }
+}
 Set-Location $work
 & (Join-Path $PSScriptRoot "cleanup-host.ps1")
 # remote access (phone, other devices) via portable Tailscale - only when it was set up (tailscale.ps1 login)

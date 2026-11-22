@@ -9,7 +9,7 @@
 # installed on this PC (Chrome, Edge or Brave), else Hermes' portable Chromium. That Chromium cannot use
 # its sandbox from an exFAT drive (renders blank), so it runs with --no-sandbox, for the local Webapp only.
 # Drive letter: Hermes binds each chat to the data folder's exact path (e.g. E:\Hermes\data), so Hermes
-# only starts from the drive letter it was set up on (the "home drive", saved in data\home-drive.txt). On a
+# only starts from one drive letter (the "home drive", saved in data\home-drive.txt; Y: for a new setup). On a
 # PC where this drive has another letter, the drive gets the home letter first (one Windows UAC
 # confirmation; Windows then remembers the letter for this drive on that PC). Without administrator rights,
 # or when that letter belongs to another drive there, Hermes does not start and says why.

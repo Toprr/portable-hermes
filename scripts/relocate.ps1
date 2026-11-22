@@ -62,7 +62,20 @@ try {
             }
             if ($fixed -ne $text) { [IO.File]::WriteAllText($f, $fixed, $utf8) }
         }
-        Write-Host "[OK] Paths updated ($($files.Count) files checked)." -ForegroundColor Green
+        # config.yaml (root + bots) keeps the update channel per install: update.installs.<key>.path.
+        # Without the new key Hermes would treat the moved folder as unconfigured and switch to "stable".
+        $configs = @([IO.Path]::Combine($env:HERMES_HOME, "config.yaml")) +
+                   @(Get-ChildItem ([IO.Path]::Combine($env:HERMES_HOME, "profiles")) -Directory -ErrorAction SilentlyContinue |
+                       ForEach-Object { [IO.Path]::Combine($_.FullName, "config.yaml") })
+        foreach ($f in $configs) {
+            if (-not [IO.File]::Exists($f)) { continue }
+            $text = [IO.File]::ReadAllText($f)
+            $fixed = [regex]::Replace($text, '(?m)^(\s+)' + $oldKey + ':', '${1}' + $newKey + ':')
+            $fixed = [regex]::Replace($fixed, '(?m)^(\s+path:\s*)' + [regex]::Escape($oldRoot + "\hermes-agent") + '[ \t]*(?=\r?$)',
+                '${1}' + ($newRoot + "\hermes-agent").Replace('$', '$$'), [Text.RegularExpressions.RegexOptions]::IgnoreCase)
+            if ($fixed -ne $text) { [IO.File]::WriteAllText($f, $fixed, $utf8) }
+        }
+        Write-Host "[OK] Paths updated ($($files.Count + $configs.Count) files checked)." -ForegroundColor Green
         # The official launchers (hermes-agent\.hermes\bin and data\bin, used by the desktop app,
         # the gateway and Hermes' own relaunches) embed the source path: re-create them with
         # Hermes' own function so they point at the new location.

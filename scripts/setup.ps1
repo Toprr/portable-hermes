@@ -8,6 +8,7 @@
 param([ValidateSet("main", "stable")][string]$Channel = "main")
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "portable-env.ps1")
+. (Join-Path $PSScriptRoot "clear-git-locks.ps1")
 $root = $env:HERMES_PORTABLE_ROOT
 $installer = Join-Path $PSScriptRoot "hermes-install.ps1"
 
@@ -80,9 +81,16 @@ New-Item -ItemType Directory -Force -Path $work | Out-Null
 & powershell -NoProfile -ExecutionPolicy Bypass -File $hermes config set terminal.cwd $work | Out-Null
 
 [IO.File]::WriteAllText((Join-Path $env:HERMES_HOME ".portable-root"), $root, (New-Object Text.UTF8Encoding $false))
-# the "home drive": chats are bound to this folder's exact path, so Hermes.bat always starts from this letter
+# the "home drive": chats are bound to this folder's exact path, so Hermes.bat always starts from this letter.
+# Y: is almost never taken (D:, E:, F: often are: card readers, DVD drives, other USB drives), so a new
+# setup uses Y: and Hermes.bat moves the drive there; only when Y: is already used on this PC does it
+# keep the current letter. A folder that already has a home drive keeps it.
 $homeFile = Join-Path $env:HERMES_HOME "home-drive.txt"
-if (-not (Test-Path -LiteralPath $homeFile)) { [IO.File]::WriteAllText($homeFile, (Split-Path $root -Qualifier).ToUpper()) }
+if (-not (Test-Path -LiteralPath $homeFile)) {
+    $current = (Split-Path $root -Qualifier).ToUpper()
+    $homeLetter = if ($current -eq "Y:" -or -not (Test-Path -LiteralPath "Y:\")) { "Y:" } else { $current }
+    [IO.File]::WriteAllText($homeFile, $homeLetter)
+}
 Write-Host ""
 Write-Host "[OK] Setup complete. Start Hermes with Hermes.bat." -ForegroundColor Green
 Write-Host "     Home drive letter: $((Get-Content -LiteralPath $homeFile -TotalCount 1).Trim()) (see README: drive letters)"

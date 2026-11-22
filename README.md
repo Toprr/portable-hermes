@@ -34,7 +34,7 @@ source code is never changed, so every official update works.
 - Internet during setup and updates
 - A drive formatted as **NTFS or exFAT**. FAT32 cannot hold files over 4 GB (local models).
 
-Last tested with **Hermes Agent v0.23.2** (`main` channel, November 2026). Hermes changes quickly and
+Last tested with **Hermes Agent v0.23.3** (`main` channel, November 2026). Hermes changes quickly and
 these scripts rely on its installer stages and build scripts, so a newer Hermes version can break setup
 or updates. If that happens, please [open an issue](https://github.com/Toprr/portable-hermes/issues).
 
@@ -82,16 +82,20 @@ Hermes binds every chat to the exact path of its data folder, for example `E:\He
 Hermes security feature that protects your saved credentials. If the same chats run from `F:\Hermes`
 on another PC, Hermes refuses to continue them.
 
-So Portable Hermes always runs from the drive letter it was set up on (the **home drive**, saved in
-`data\home-drive.txt`):
+So Portable Hermes always runs from one fixed drive letter, the **home drive**, saved in
+`data\home-drive.txt`. A new setup uses **`Y:`**, because it is almost never taken (`D:`, `E:` and
+`F:` often are, by card readers, DVD drives or other USB drives). Only if `Y:` is already used on the
+PC you set up on does it keep the current letter.
 
-- On a PC where your drive gets another letter, `Hermes.bat` asks once for administrator rights (UAC)
-  and gives the drive its home letter. Windows remembers that letter for this drive on that PC.
+- On a PC where your drive has another letter (also right after setup), `Hermes.bat` asks once for
+  administrator rights (UAC) and gives the drive its home letter. Windows remembers that letter for
+  this drive on that PC.
 - If you decline, or another drive already uses that letter on that PC, Hermes does not start and
   tells you why.
 
-Tip: set it up on a letter that is rarely taken, such as `H:` or `P:`. `scripts\relocate.ps1` also
-repairs Hermes' install paths when the folder is started from another location anyway.
+To use another letter, write it (for example `P:`) into `data\home-drive.txt` before your first chat.
+`scripts\relocate.ps1` also repairs Hermes' install paths and keeps the update channel when the folder
+is started from another location anyway.
 
 ## Remote access (optional)
 
@@ -134,6 +138,11 @@ and the Webapp. Only check: `scripts\update.ps1 -Check`. To follow published rel
 
 On exFAT, Hermes' own in-place Node build reports a symlink error during the update. That is
 expected: the scripts build the same interfaces in a temporary copy right after it.
+
+If an update or setup was interrupted (drive unplugged, PC switched off), Git leaves
+`hermes-agent\.git\index.lock` behind, and every later Git command fails with "File exists".
+`Update.bat` and `Setup.bat` remove such a stale lock themselves (`scripts\clear-git-locks.ps1`) when
+no Git from this folder is running.
 
 An update does not touch `data\` (settings, `.env` with your keys, chats, memory, skills, plugins),
 `workspace\`, `cache\` or `scripts\`. Hermes makes its own backup before every update.

@@ -61,6 +61,11 @@ Webapp build is skipped when `data\.portable-webapp-build.json` already names th
 `hermes pm install git`, then the two builds above. Hermes' in-place Node build during the update
 fails on exFAT; that warning is expected and the builds replace it.
 
+Before that, `scripts\clear-git-locks.ps1` (also run by `setup.ps1`) removes Git's own lock files
+(`index.lock`, `HEAD.lock`, `refs\...\*.lock` and similar) that an interrupted run left behind. A lock
+counts as stale only when it is older than two minutes and no Git process from this folder runs.
+Hermes' own lock files in `.git` (`hermes-update.lock` and others) are never touched.
+
 ## 5. Moving the folder (`scripts\relocate.ps1`)
 
 Hermes stores a few absolute paths:
@@ -76,6 +81,12 @@ the install state to the new key, rewrites the old root to the new one in those 
 segments only), and re-creates the launchers with Hermes' own `ensure_install_launchers()`. Hermes
 then does not rebuild its environment (which would need internet and minutes).
 
+`config.yaml` (main and every bot) keeps the update channel per install under
+`update.installs.<key>` with the source path. `relocate.ps1` renames that key and its path too;
+without it Hermes would treat the moved folder as unconfigured and fall back to `stable`.
+`start.ps1` sets `terminal.cwd` to `workspace\` for every bot (`hermes -p <bot> config set`), not only
+the main profile, so the agents keep working in the folder after a move.
+
 ## 6. Chats and the drive letter (`scripts\launcher.ps1`)
 
 This part cannot be solved by moving paths. Each chat keeps a launch policy (`state.db`,
@@ -86,7 +97,9 @@ Things that do **not** work: `subst` (Python resolves it back to the real drive)
 `state.db`.
 
 So the launcher keeps the path identical. `setup.ps1` writes the home drive letter to
-`data\home-drive.txt`. When `Hermes.bat` runs from another letter, the launcher:
+`data\home-drive.txt`: `Y:` (rarely taken), or the current letter when `Y:` is already used on the
+setup PC. A folder that already has the file keeps its letter. When `Hermes.bat` runs from another
+letter, the launcher:
 
 1. runs `Set-Partition -NewDriveLetter` elevated (one UAC prompt), with `mountvol` as fallback,
 2. waits for the folder to appear under the home letter,
