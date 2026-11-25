@@ -34,6 +34,16 @@ foreach ($bot in $bots) {
 }
 Set-Location $work
 & (Join-Path $PSScriptRoot "cleanup-host.ps1")
+# add-ons Hermes' updater does not cover (addons.ps1): a staged plugin update goes live now, before the
+# gateway starts; the daily update check runs hidden in the background. Never blocks the start.
+$addons = Join-Path $PSScriptRoot "addons.ps1"
+try {
+    & $addons -ApplyStaged
+    $logDir = Join-Path $env:HERMES_HOME "logs"
+    New-Item -ItemType Directory -Force -Path $logDir | Out-Null
+    Start-Process powershell -WindowStyle Hidden -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$addons`"", "-Auto") `
+        -RedirectStandardOutput (Join-Path $logDir "addons.log") -RedirectStandardError (Join-Path $logDir "addons.err.log") | Out-Null
+} catch { Write-Host "Add-ons: $_" -ForegroundColor Yellow }
 # remote access (phone, other devices) via portable Tailscale - only when it was set up (tailscale.ps1 login)
 try { & (Join-Path $PSScriptRoot "tailscale.ps1") start } catch { Write-Host "Tailscale: $_" -ForegroundColor Yellow }
 

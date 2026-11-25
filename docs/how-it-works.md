@@ -109,13 +109,44 @@ If the letter is taken or elevation is declined, it shows a message and does not
 
 ## 7. Nothing left on the host (`scripts\cleanup-host.ps1`)
 
-Two things still land outside the folder; `start.ps1` and `stop.ps1` remove them:
+Three things still land outside the folder; `start.ps1` and `stop.ps1` remove them:
 
 - **Bot alias:** creating a profile ("bot") makes Hermes write `%USERPROFILE%\.local\bin\<bot>.bat`.
   The script removes only files whose content is exactly Hermes' alias for a bot of this folder.
 - **pnpm locks:** pnpm 12 keeps empty lock files in
   `%USERPROFILE%\AppData\Local\pnpm-store-operation-locks`. No setting moves them. The folder is
   removed when pnpm is not running and it holds only empty `.lock` files.
+- **agent-desktop state (exFAT only):** agent-desktop checks that its state folder
+  (`AGENT_DESKTOP_HOME`) is owned by the current user and refuses otherwise ("owned by a foreign
+  principal"); exFAT stores no owner and there is no opt-out. So `portable-env.ps1` points it to
+  `%LOCALAPPDATA%\Temp\hermes-portable-agent-desktop` when the drive is not NTFS. It only holds the
+  references to the controls of the windows read last; the folder is removed while no agent-desktop
+  from this folder runs.
+
+## Add-ons (`scripts\addons.ps1`)
+
+Hermes' updater covers Hermes. This script covers the rest, for every bot (profile):
+
+- **agent-desktop:** asks the GitHub API for the latest release, picks
+  `agent-desktop-<tag>-<x86_64|aarch64>-pc-windows-msvc.tar.gz`, refuses it without a published
+  `sha256:` digest, checks the download against it, unpacks only `agent-desktop.exe`, checks that it
+  reports the expected version, then swaps it in (a running exe can be renamed, not overwritten).
+  `portable-env.ps1` puts `tools\agent-desktop` on the PATH, so the agent's terminal finds it.
+- **Skills:** installs `skills-sh/vercel-labs/agent-desktop/agent-desktop` from Hermes' skills hub where
+  it is missing, then `hermes skills update`. The skill tells the agent to load the platform guide from
+  the binary itself (`agent-desktop skills get platform`), so guide and binary always match.
+- **Plugins:** `hermes plugins auto-update on` (Hermes' own daily, scan-gated updates of catalog and
+  tracked Git plugins) and, outside the daily run, `hermes plugins update --yes`.
+- **Hermex push (optional):** only with `data\addons\hermex-push.patch`. The upstream head comes from
+  `git ls-remote`; a copy counts as outdated when its commit differs from `data\addons\hermex-push.rev`
+  or the patch cannot be reversed on it (`git apply -R --check`, for example after the Hermex app
+  reinstalled the plugin). A full clone gets the patch with `git apply --3way`, must pass
+  `hermes plugins doctor --ci`, and the patch is saved again rebased onto that version. The result is
+  staged in `data\addons\staged` and `start.ps1` moves it into every bot's `plugins\hermex-push` with
+  `addons.ps1 -ApplyStaged` while port 9120 is closed, so a running gateway never sees half a plugin.
+
+`start.ps1` starts `addons.ps1 -Auto` hidden: it waits 90 s so the gateway can finish starting, and
+does nothing when `data\addons\last-run` is less than 20 hours old. A mutex keeps two runs apart.
 
 ## 8. The start window (`scripts\launcher.ps1`)
 

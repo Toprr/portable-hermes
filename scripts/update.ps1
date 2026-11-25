@@ -1,7 +1,8 @@
 # Updates the portable Hermes Agent with Hermes' own updater ("hermes update": git, dependencies,
 # skills, config migration, backup) on the channel chosen at setup (main = every new commit of the
 # official repository, stable = published releases), then rebuilds the Node interfaces on the NTFS
-# system drive when the new version changed them (Hermes' own Node build cannot run on exFAT).
+# system drive when the new version changed them (Hermes' own Node build cannot run on exFAT), and
+# updates the add-ons Hermes' updater does not cover (addons.ps1).
 # All data (data\: settings, keys, chats, memory, skills) stays where it is.
 #   update.ps1           update
 #   update.ps1 -Check    only report whether an update is available
@@ -28,12 +29,15 @@ $ui = $LASTEXITCODE
 Write-Host "-> Checking the Webapp" -ForegroundColor Cyan
 & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "build-webapp.ps1")
 $web = $LASTEXITCODE
+Write-Host "-> Updating the add-ons (agent-desktop, hub skills, plugins)" -ForegroundColor Cyan
+& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "addons.ps1")
+$addons = $LASTEXITCODE
 
 & powershell -NoProfile -ExecutionPolicy Bypass -File $hermes --version
 # leftovers the Node builds put outside this folder (pnpm lock files)
 & (Join-Path $PSScriptRoot "cleanup-host.ps1")
-if ($code -or $ui -or $web) {
-    Write-Warning "The update finished with warnings (updater exit $code, interface build exit $ui, Webapp build exit $web). Hermes keeps working; see the output above."
+if ($code -or $ui -or $web -or $addons) {
+    Write-Warning "The update finished with warnings (updater exit $code, interface build exit $ui, Webapp build exit $web, add-ons exit $addons). Hermes keeps working; see the output above."
 }
 Write-Host "Restart Hermes (Stop-Hermes.bat, then Hermes.bat) so the running gateway loads the new version."
 exit 0

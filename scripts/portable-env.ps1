@@ -32,6 +32,12 @@ $env:npm_config_store_dir  = $env:pnpm_config_store_dir
 $env:PNPM_HOME             = Join-Path $store "pnpm-home"
 # the gateway's machine-wide lock/rendezvous files (default %USERPROFILE%\.local\state\hermes)
 $env:HERMES_GATEWAY_LOCK_DIR = Join-Path $root "data\state\gateway-locks"
+# agent-desktop (desktop apps through the accessibility tree, scripts\addons.ps1): its temporary state
+# (snapshot refs of open apps, sessions; default %USERPROFILE%\.agent-desktop). agent-desktop refuses a
+# state folder whose owner it cannot verify, which exFAT does not record, so on exFAT the state goes to
+# the PC's temp folder and cleanup-host.ps1 removes it again; on NTFS it stays in data\.
+$env:AGENT_DESKTOP_HOME = if ([IO.DriveInfo]::new([IO.Path]::GetPathRoot($root)).DriveFormat -eq "NTFS") {
+    Join-Path $root "data\agent-desktop" } else { Join-Path $env:LOCALAPPDATA "Temp\hermes-portable-agent-desktop" }
 $env:HF_HOME          = Join-Path $root "cache\huggingface"
 $env:XDG_CACHE_HOME   = Join-Path $root "cache"
 $env:PYTHONUTF8       = "1"
@@ -66,7 +72,7 @@ if (-not (Test-Path -LiteralPath $env:GIT_CONFIG_GLOBAL)) {
 
 # PATH: Hermes' launchers + every tool PM installed (as PM itself declares them in facts.json,
 # "{{store}}" = data\tools), ahead of everything on the host. Only for this process.
-$pathParts = @((Join-Path $env:HERMES_HOME "bin"), (Join-Path $store "npm-global"))
+$pathParts = @((Join-Path $env:HERMES_HOME "bin"), (Join-Path $store "npm-global"), (Join-Path $root "tools\agent-desktop"))
 $facts = Join-Path $store "facts.json"
 if (Test-Path -LiteralPath $facts) {
     try {

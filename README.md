@@ -21,6 +21,10 @@ source code is never changed, so every official update works.
   own app window and has Update, Repair, Restart and Stop buttons. Closing the app window stops
   Hermes. Minimizing sends it to the tray.
 - **Updates** with Hermes' own updater (`Update.bat`). Settings and chats stay where they are.
+- **Desktop apps for every bot:** [agent-desktop](https://github.com/vercel-labs/agent-desktop) from
+  Vercel and its official skill. The agent reads a window's controls through the Windows accessibility
+  tree and clicks them in the background: no screenshots, no mouse, works with any model (local
+  ones too). It stays on the newest release by itself (see [Add-ons](#add-ons)).
 - **Works on exFAT** (the usual format of USB SSDs): the interfaces that cannot be built on exFAT are
   built in a temporary copy on the system drive and copied back.
 - **Any PC:** a drive letter change on another PC is handled for you (see [Drive letters](#drive-letters)).
@@ -34,7 +38,7 @@ source code is never changed, so every official update works.
 - Internet during setup and updates
 - A drive formatted as **NTFS or exFAT**. FAT32 cannot hold files over 4 GB (local models).
 
-Last tested with **Hermes Agent v0.23.3** (`main` channel, November 2026). Hermes changes quickly and
+Last tested with **Hermes Agent v0.23.4** (`main` channel, November 2026). Hermes changes quickly and
 these scripts rely on its installer stages and build scripts, so a newer Hermes version can break setup
 or updates. If that happens, please [open an issue](https://github.com/Toprr/portable-hermes/issues).
 
@@ -147,6 +151,42 @@ no Git from this folder is running.
 An update does not touch `data\` (settings, `.env` with your keys, chats, memory, skills, plugins),
 `workspace\`, `cache\` or `scripts\`. Hermes makes its own backup before every update.
 
+## Add-ons
+
+`scripts\addons.ps1` keeps what Hermes' own updater does not cover up to date. It runs at the end of
+`Setup.bat`, with every `Update.bat`, and once a day hidden in the background after Hermes starts
+(log: `data\logs\addons.log`).
+
+- **agent-desktop** (`tools\agent-desktop`): always the newest
+  [release](https://github.com/vercel-labs/agent-desktop/releases), checked against the sha256 digest
+  GitHub publishes for it.
+- **Skills from registries:** the official `agent-desktop` skill is installed on every bot (profile)
+  that lacks it, and `hermes skills update` runs for every bot (with Hermes' security scan).
+- **Plugins from the catalog or Git:** Hermes' own unattended plugin update (`plugins.auto_apply`,
+  checked daily by the gateway) is switched on for every bot, and `Update.bat` also runs
+  `hermes plugins update`.
+- **Optional, the Hermex push plugin:** it imports `fcntl`, which Windows lacks
+  ([upstream issue](https://github.com/uzairansaruzi/hermex-push/issues/36)). If you keep your own fix
+  as a patch in `data\addons\hermex-push.patch` (a `git diff` relative to the plugin folder), every new
+  upstream version gets the patch, is checked with `hermes plugins doctor` and goes live at the next
+  start, never under a running gateway. If the patch no longer fits, the working version stays and the
+  log says so.
+
+Tip: tell your bots when to use it, for example in `data\SOUL.md`:
+
+```
+DESKTOP APPS
+To see or operate a desktop app on this PC, use the `agent-desktop` skill and its CLI first. Find the
+target with `agent-desktop list-windows` and pass its id with `--window-id`: a window title such as
+Calculator is not an app name (apps are named by their process, for example CalculatorApp.exe). Use
+`computer_use` only to check how something looks, or for apps without accessibility info (games).
+```
+
+agent-desktop refuses a state folder whose owner it cannot verify, and exFAT records no owners. On
+exFAT its short-lived state (references to the controls it last read) therefore lives in
+`%LOCALAPPDATA%\Temp\hermes-portable-agent-desktop` and is deleted at every start and stop. On NTFS it
+stays in `data\agent-desktop`.
+
 ## Folder layout
 
 ```
@@ -156,7 +196,7 @@ hermes-agent\   the official Hermes source (git checkout, updated by Update.bat)
 data\           HERMES_HOME: config.yaml, .env (API keys), chats, memory, skills, plugins, tools
 workspace\      the agent's working folder
 cache\          caches and temp files (safe to delete while Hermes is stopped)
-tools\          portable Tailscale (only with remote access)
+tools\          agent-desktop, portable Tailscale (only with remote access)
 ```
 
 How it works in detail, and the problems it solves: [docs/how-it-works.md](docs/how-it-works.md).

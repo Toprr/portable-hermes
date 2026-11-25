@@ -91,6 +91,10 @@ if (-not (Test-Path -LiteralPath $homeFile)) {
     $homeLetter = if ($current -eq "Y:" -or -not (Test-Path -LiteralPath "Y:\")) { "Y:" } else { $current }
     [IO.File]::WriteAllText($homeFile, $homeLetter)
 }
+# 6) add-ons Hermes' updater does not cover: agent-desktop (desktop apps) and its skill for every bot
+Write-Host "-> Installing the add-ons (agent-desktop)" -ForegroundColor Cyan
+& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "addons.ps1")
+if ($LASTEXITCODE) { Write-Warning "Add-ons not complete. Hermes retries them at the next start." }
 Write-Host ""
 Write-Host "[OK] Setup complete. Start Hermes with Hermes.bat." -ForegroundColor Green
 Write-Host "     Home drive letter: $((Get-Content -LiteralPath $homeFile -TotalCount 1).Trim()) (see README: drive letters)"
