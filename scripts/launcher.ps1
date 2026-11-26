@@ -54,8 +54,9 @@ if ($have -ne $homeDrive) {
     if (-not (Test-Path -LiteralPath "$moved\scripts\launcher.ps1")) {
         Show-DriveError "This drive is $have here, and Windows did not change it to $homeDrive."
     }
-    Start-Process powershell -WorkingDirectory $moved -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-STA",
-        "-WindowStyle", "Hidden", "-File", "$moved\scripts\launcher.ps1")
+    # conhost --headless: no console window, also when Windows Terminal is the default console (see Hermes.bat)
+    Start-Process conhost.exe -WorkingDirectory $moved -ArgumentList @("--headless", "powershell", "-NoProfile", "-ExecutionPolicy",
+        "Bypass", "-STA", "-WindowStyle", "Hidden", "-File", "`"$moved\scripts\launcher.ps1`"")
     exit 0
 }
 
